@@ -46,14 +46,8 @@ export class Validator {
         this.size += xs.shape[0]
 
         // Get labels from one hot encoding
-        const preds = List(oneHotPreds.reshape([-1, this.classes]).arraySync() as number[][])
-          .map((p) => List(p)
-            .map((b, i) => Math.round(b) === 1 ? i : 0)
-            .reduce((acc: number, e) => acc + e))
-        const labels = List(ys.reshape([-1, this.classes]).arraySync() as number[][])
-          .map((p) => List(p)
-            .map((b, i) => b === 1 ? i : 0)
-            .reduce((acc: number, e) => acc + e))
+        const preds = List(oneHotPreds.reshape([-1, this.classes]).argMax(1).arraySync() as number[])
+        const labels = List(ys.reshape([-1, this.classes]).argMax(1).arraySync() as number[])
 
         // Keep track of prediction results for the confusion matrix
         if (useConfusionMatrix) {
