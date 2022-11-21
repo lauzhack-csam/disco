@@ -76,7 +76,7 @@ export default defineComponent({
     return {
       distributedTraining: false,
       startedTraining: false,
-      trainingInformant: new informant.LocalInformant(this.task.taskID, 10)
+      trainingInformant: new informant.LocalInformant(this.task, 10)
     }
   },
   computed: {

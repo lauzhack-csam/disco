@@ -16,6 +16,7 @@
         Test
       </template>
     </ButtonCard>
+
     <!-- display the chart -->
     <div class="p-4 mx-auto lg:w-1/2 h-full bg-white rounded-md">
       <!-- header -->
@@ -42,6 +43,77 @@
         :series="[{ data: accuracyData }]"
       />
     </div>
+
+    <div
+      v-if="validator?.confusionMatrix !== undefined"
+      class="flex flex-col space-y-8"
+    >
+      <IconCard
+        class="w-full lg:w-3/5 mx-auto"
+      >
+        <template #title>
+          Confusion Matrix ({{ numberOfClasses }}x{{ numberOfClasses }})
+        </template>
+        <template #content>
+          <table class="auto border-collapse w-full">
+            <thead>
+              <tr>
+                <td />
+                <td
+                  v-for="(_, i) in validator.confusionMatrix"
+                  :key="i"
+                  class="
+                      text-center text-disco-cyan text-lg font-normal
+                      p-3 border-l-2 border-disco-cyan
+                    "
+                >
+                  {{ task.trainingInformation.LABEL_LIST[i] }}
+                </td>
+              </tr>
+            </thead>
+            <tbody>
+              <tr
+                v-for="(row, i) in validator.confusionMatrix"
+                :key="i"
+              >
+                <th class="text-center text-disco-cyan text-lg font-normal border-t-2 border-disco-cyan">
+                  {{ task.trainingInformation.LABEL_LIST[i] }}
+                </th>
+                <td
+                  v-for="(predictions, j) in row"
+                  :key="j"
+                  class="text-center text-lg p-3 border-l-2 border-t-2 border-disco-cyan"
+                >
+                  {{ predictions }}
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </template>
+      </IconCard>
+      <IconCard
+        v-if="numberOfClasses === 2"
+        class="w-full lg:w-3/5 mx-auto"
+      >
+        <template #title>
+          Evaluation Metrics
+        </template>
+        <template #content>
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+            <div>
+              <h3 class="font-bold">
+                Sensitivity
+              </h3><span>{{ validator.confusionMatrix[0] }}</span>
+            </div>
+            <div>
+              <h3 class="font-bold">
+                Specificity
+              </h3><span>{{ validator.confusionMatrix[1] }}</span>
+            </div>
+          </div>
+        </template>
+      </IconCard>
+    </div>
   </div>
 </template>
 <script lang="ts" setup>
@@ -55,6 +127,7 @@ import { useValidationStore } from '@/store/validation'
 import { chartOptions } from '@/charts'
 import { useToaster } from '@/composables/toaster'
 import ButtonCard from '@/components/containers/ButtonCard.vue'
+import IconCard from '@/components/containers/IconCard.vue'
 
 const { useIndexedDB } = storeToRefs(useMemoryStore())
 const toaster = useToaster()
@@ -66,19 +139,26 @@ interface Props {
 }
 const props = defineProps<Props>()
 
-const validator = ref<Validator>(undefined)
+const validator = ref<Validator | undefined>(undefined)
 
-const memory = computed<Memory>(() => useIndexedDB ? new browser.IndexedDB() : new EmptyMemory())
+const numberOfClasses = computed<number>(() =>
+  props.task.trainingInformation.LABEL_LIST?.length ?? 2)
+
+const memory = computed<Memory>(() =>
+  useIndexedDB ? new browser.IndexedDB() : new EmptyMemory())
+
 const accuracyData = computed<number[]>(() => {
-  const r = validator.value?.accuracyData()
+  const r = validator.value?.accuracyData
   return r !== undefined ? r.toArray() : [0]
 })
+
 const currentAccuracy = computed<string>(() => {
-  const r = validator.value?.accuracy()
+  const r = validator.value?.accuracy
   return r !== undefined ? (r * 100).toFixed(2) : '0'
 })
+
 const visitedSamples = computed<number>(() => {
-  const r = validator.value?.visitedSamples()
+  const r = validator.value?.visitedSamples
   return r !== undefined ? r : 0
 })
 
@@ -106,7 +186,7 @@ async function assessModel (): Promise<void> {
   toaster.success('Model testing started')
 
   try {
-    await validator.value?.assess(testingSet)
+    await validator.value?.assess(testingSet, numberOfClasses.value <= 8)
   } catch (e) {
     toaster.error(e instanceof Error ? e.message : e.toString())
   }
