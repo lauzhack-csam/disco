@@ -1,55 +1,63 @@
 <template>
-  <div class="space-y-8">
+  <div class="flex flex-col gap-4 md:gap-8">
     <!-- test the model -->
-    <ButtonCard
-      class="mx-auto mt-10 lg:w-1/2"
-      :click="assessModel"
-      :button-placement="'center'"
+    <IconCard
+      class="w-3/5 mx-auto"
+      title-placement="center"
     >
       <template #title>
-        Test & validate your model
+        Test & Validate Your Model
       </template>
-      <template #text>
-        By clicking the button below, you will be able to validate your model against a chosen dataset of yours.
+      <template #content>
+        <div class="flex flex-col gap-4 md:gap-8">
+          <span class="text-center">
+            Click the button below to evaluate your model against a chosen dataset of yours.
+          </span>
+          <div class="mx-auto">
+            <CustomButton
+              @click="assessModel"
+            >
+              Test
+            </CustomButton>
+          </div>
+        </div>
       </template>
-      <template #button>
-        Test
-      </template>
-    </ButtonCard>
+    </IconCard>
 
     <!-- display the chart -->
-    <div class="p-4 mx-auto lg:w-1/2 h-full bg-white rounded-md">
-      <!-- header -->
-      <h4 class="p-4 border-b text-lg font-semibold text-slate-500">
+    <IconCard>
+      <template #title>
         Test Accuracy
-      </h4>
-      <!-- stats -->
-      <div class="grid grid-cols-2 p-4 font-medium text-slate-500">
-        <div class="text-center">
-          <span class="text-2xl">{{ currentAccuracy }}</span>
-          <span class="text-sm">% of test accuracy</span>
+      </template>
+      <template #content>
+        <!-- stats -->
+        <div class="grid grid-cols-2 p-4 font-medium text-slate-500">
+          <div class="text-center">
+            <span class="text-2xl">{{ currentAccuracy }}</span>
+            <span class="text-sm">% of test accuracy</span>
+          </div>
+          <div class="text-center">
+            <span class="text-2xl">{{ visitedSamples }}</span>
+            <span class="text-sm">&nbsp;samples visited</span>
+          </div>
         </div>
-        <div class="text-center">
-          <span class="text-2xl">{{ visitedSamples }}</span>
-          <span class="text-sm">&nbsp;samples visited</span>
-        </div>
-      </div>
-      <!-- chart -->
-      <apexchart
-        width="100%"
-        height="200"
-        type="area"
-        :options="chartOptions"
-        :series="[{ data: accuracyData }]"
-      />
-    </div>
+        <!-- chart -->
+        <apexchart
+          width="100%"
+          height="200"
+          type="area"
+          :options="chartOptions"
+          :series="[{ data: accuracyData }]"
+        />
+      </template>
+    </IconCard>
 
     <div
       v-if="validator?.confusionMatrix !== undefined"
       class="flex flex-col space-y-8"
     >
       <IconCard
-        class="w-full lg:w-3/5 mx-auto"
+        class="w-3/5 mx-auto"
       >
         <template #title>
           Confusion Matrix ({{ numberOfClasses }}x{{ numberOfClasses }})
@@ -64,7 +72,7 @@
                   :key="i"
                   class="
                       text-center text-disco-cyan text-lg font-normal
-                      p-3 border-l-2 border-disco-cyan
+                      p-3
                     "
                 >
                   {{ task.trainingInformation.LABEL_LIST[i] }}
@@ -76,13 +84,13 @@
                 v-for="(row, i) in validator.confusionMatrix"
                 :key="i"
               >
-                <th class="text-center text-disco-cyan text-lg font-normal border-t-2 border-disco-cyan">
+                <th class="text-center text-disco-cyan text-lg font-normal">
                   {{ task.trainingInformation.LABEL_LIST[i] }}
                 </th>
                 <td
                   v-for="(predictions, j) in row"
                   :key="j"
-                  class="text-center text-lg p-3 border-l-2 border-t-2 border-disco-cyan"
+                  class="text-center text-lg p-3"
                 >
                   {{ predictions }}
                 </td>
@@ -91,23 +99,30 @@
           </table>
         </template>
       </IconCard>
-      <IconCard
-        v-if="numberOfClasses === 2"
-        class="w-full lg:w-3/5 mx-auto"
-      >
+      <IconCard class="w-3/5 mx-auto">
         <template #title>
           Evaluation Metrics
         </template>
         <template #content>
           <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-            <div>
+            <div v-if="numberOfClasses === 2">
               <h3 class="font-bold">
                 Sensitivity
               </h3><span>{{ validator.confusionMatrix[0] }}</span>
             </div>
-            <div>
+            <div v-if="numberOfClasses === 2">
               <h3 class="font-bold">
                 Specificity
+              </h3><span>{{ validator.confusionMatrix[1] }}</span>
+            </div>
+            <div v-if="numberOfClasses === 2">
+              <h3 class="font-bold">
+                F1-Score
+              </h3><span>{{ validator.confusionMatrix[1] }}</span>
+            </div>
+            <div v-else>
+              <h3 class="font-bold">
+                Macro Average F1-Score
               </h3><span>{{ validator.confusionMatrix[1] }}</span>
             </div>
           </div>
@@ -126,8 +141,8 @@ import { useMemoryStore } from '@/store/memory'
 import { useValidationStore } from '@/store/validation'
 import { chartOptions } from '@/charts'
 import { useToaster } from '@/composables/toaster'
-import ButtonCard from '@/components/containers/ButtonCard.vue'
 import IconCard from '@/components/containers/IconCard.vue'
+import CustomButton from '@/components/simple/CustomButton.vue'
 
 const { useIndexedDB } = storeToRefs(useMemoryStore())
 const toaster = useToaster()

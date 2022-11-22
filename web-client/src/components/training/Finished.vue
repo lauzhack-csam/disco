@@ -2,8 +2,8 @@
   <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mt-10 items-stretch">
     <!-- Save the model -->
     <ButtonCard
-      :click="testModel"
       :button-placement="'center'"
+      @click="testModel"
     >
       <template #title>
         Test the model
@@ -18,8 +18,8 @@
     </ButtonCard>
     <!-- Test the model -->
     <ButtonCard
-      :click="saveModel"
       :button-placement="'center'"
+      @click="saveModel"
     >
       <template #title>
         Save the model

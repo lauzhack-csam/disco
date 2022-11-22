@@ -8,7 +8,9 @@
       transition duration-200
       group
       hover:-translate-y-1 hover:scale-[101%]
-      hover:outline hover:outline-2 hover:outline-disco-cyan"
+      hover:outline hover:outline-2 hover:outline-disco-cyan
+      hover:cursor-pointer
+    "
   >
     <div
       :class="'text-' + titlePlacement"
@@ -23,9 +25,7 @@
       :class="'text-' + buttonPlacement"
       class="mt-auto"
     >
-      <CustomButton
-        @click="click"
-      >
+      <CustomButton>
         <slot name="button" />
       </CustomButton>
     </div>
@@ -49,10 +49,6 @@ export default defineComponent({
     buttonPlacement: {
       type: String,
       default: 'center'
-    },
-    click: {
-      type: Function,
-      default: () => {}
     }
   }
 })

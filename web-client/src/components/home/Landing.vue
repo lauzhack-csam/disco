@@ -1,8 +1,8 @@
 <template>
   <div class="flex">
     <ButtonCard
-      :click="getStarted"
       class="mx-auto"
+      @click="getStarted"
     >
       <template #title>
         Build AI with collaborators <span class="underline">without sharing any data</span>
