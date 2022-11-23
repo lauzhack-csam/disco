@@ -1,28 +1,21 @@
 <template>
   <div class="flex flex-col gap-4 md:gap-8">
     <!-- test the model -->
-    <IconCard
-      class="w-3/5 mx-auto"
+    <ButtonCard
+      class="w-full md:w-1/2 mx-auto"
       title-placement="center"
+      @click="assessModel"
     >
       <template #title>
         Test & Validate Your Model
       </template>
-      <template #content>
-        <div class="flex flex-col gap-4 md:gap-8">
-          <span class="text-center">
-            Click the button below to evaluate your model against a chosen dataset of yours.
-          </span>
-          <div class="mx-auto">
-            <CustomButton
-              @click="assessModel"
-            >
-              Test
-            </CustomButton>
-          </div>
-        </div>
+      <template #text>
+        Click the button below to evaluate your model against a chosen dataset of yours.
       </template>
-    </IconCard>
+      <template #button>
+        Test
+      </template>
+    </ButtonCard>
 
     <!-- display the chart -->
     <IconCard>
@@ -57,7 +50,8 @@
       class="flex flex-col space-y-8"
     >
       <IconCard
-        class="w-3/5 mx-auto"
+        title-placement="center"
+        class="w-full md:w-3/5 mx-auto"
       >
         <template #title>
           Confusion Matrix ({{ numberOfClasses }}x{{ numberOfClasses }})
@@ -71,9 +65,9 @@
                   v-for="(_, i) in validator.confusionMatrix"
                   :key="i"
                   class="
-                      text-center text-disco-cyan text-lg font-normal
-                      p-3
-                    "
+                    text-center text-disco-cyan text-lg font-normal
+                    p-3 uppercase
+                  "
                 >
                   {{ task.trainingInformation.LABEL_LIST[i] }}
                 </td>
@@ -84,7 +78,7 @@
                 v-for="(row, i) in validator.confusionMatrix"
                 :key="i"
               >
-                <th class="text-center text-disco-cyan text-lg font-normal">
+                <th class="text-center text-disco-cyan text-lg font-normal uppercase">
                   {{ task.trainingInformation.LABEL_LIST[i] }}
                 </th>
                 <td
@@ -99,32 +93,61 @@
           </table>
         </template>
       </IconCard>
-      <IconCard class="w-3/5 mx-auto">
+      <div
+        v-if="numberOfClasses === 2"
+        class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8"
+      >
+        <IconCard title-placement="center">
+          <template #title>
+            Sensitivity
+          </template>
+          <template #content>
+            <div class="flex flex-col gap-4 md:gap-8">
+              Short text explaining what sensitivity is ...
+              <span class="mx-auto">
+                Sensitivity for label "{{ task.trainingInformation.LABEL_LIST[0] }}"&nbsp;&nbsp;
+                <span class="text-2xl">{{ roundedDecimal(sensitivity(validator.confusionMatrix, 0)) }}</span>%
+              </span>
+              <span class="mx-auto">
+                Sensitivity for label "{{ task.trainingInformation.LABEL_LIST[1] }}"&nbsp;&nbsp;
+                <span class="text-2xl">{{ roundedDecimal(sensitivity(validator.confusionMatrix, 1)) }}</span>%
+              </span>
+            </div>
+          </template>
+        </IconCard>
+        <IconCard title-placement="center">
+          <template #title>
+            F1-Score
+          </template>
+          <template #content>
+            <div class="flex flex-col gap-4 md:gap-8">
+              Short text explaining what the F1-score is ...
+              <span class="mx-auto">
+                F1-score for label "{{ task.trainingInformation.LABEL_LIST[0] }}"&nbsp;&nbsp;
+                <span class="text-2xl">{{ roundedDecimal(F1Score(validator.confusionMatrix, 0)) }}</span>%
+              </span>
+              <span class="mx-auto">
+                F1-score for label "{{ task.trainingInformation.LABEL_LIST[1] }}"&nbsp;&nbsp;
+                <span class="text-2xl">{{ roundedDecimal(F1Score(validator.confusionMatrix, 1)) }}</span>%
+              </span>
+            </div>
+          </template>
+        </IconCard>
+      </div>
+      <IconCard
+        v-else
+        title-placement="center"
+        class="w-full md:w-1/2 mx-auto"
+      >
         <template #title>
-          Evaluation Metrics
+          Macro F1-Score
         </template>
         <template #content>
-          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-            <div v-if="numberOfClasses === 2">
-              <h3 class="font-bold">
-                Sensitivity
-              </h3><span>{{ validator.confusionMatrix[0] }}</span>
-            </div>
-            <div v-if="numberOfClasses === 2">
-              <h3 class="font-bold">
-                Specificity
-              </h3><span>{{ validator.confusionMatrix[1] }}</span>
-            </div>
-            <div v-if="numberOfClasses === 2">
-              <h3 class="font-bold">
-                F1-Score
-              </h3><span>{{ validator.confusionMatrix[1] }}</span>
-            </div>
-            <div v-else>
-              <h3 class="font-bold">
-                Macro Average F1-Score
-              </h3><span>{{ validator.confusionMatrix[1] }}</span>
-            </div>
+          <div class="flex flex-col gap-4 md:gap-8">
+            Short text explaining what the macro F1-score is ...
+            <span class="mx-auto">
+              <span class="text-2xl">100</span>%
+            </span>
           </div>
         </template>
       </IconCard>
@@ -142,7 +165,7 @@ import { useMemoryStore } from '@/store/memory'
 import { useValidationStore } from '@/store/validation'
 import { useToaster } from '@/composables/toaster'
 import IconCard from '@/components/containers/IconCard.vue'
-import CustomButton from '@/components/simple/CustomButton.vue'
+import ButtonCard from '@/components/containers/ButtonCard.vue'
 
 const { useIndexedDB } = storeToRefs(useMemoryStore())
 const toaster = useToaster()
@@ -173,7 +196,7 @@ const accuracyData = computed<[{ data: number[] }]>(() => {
 
 const currentAccuracy = computed<string>(() => {
   const r = validator.value?.accuracy
-  return r !== undefined ? (r * 100).toFixed(2) : '0'
+  return r !== undefined ? roundedDecimal(r) : '0'
 })
 
 const visitedSamples = computed<number>(() => {
@@ -210,5 +233,14 @@ async function assessModel (): Promise<void> {
     toaster.error(e instanceof Error ? e.message : e.toString())
   }
 }
+
+const roundedDecimal = (nbr: number, decimals: number = 2): string =>
+  (nbr * 100).toFixed(decimals)
+
+const sensitivity = (matrix: number[][], l: number): number =>
+  matrix[l][l] / (matrix[l][l] + matrix[l][1 - l])
+
+const F1Score = (matrix: number[][], l: number): number =>
+  2 * matrix[l][l] / (2 * matrix[l][l] + matrix[1 - l][l] + matrix[l][1 - l])
 
 </script>
