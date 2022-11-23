@@ -47,7 +47,7 @@
           height="200"
           type="area"
           :options="chartOptions"
-          :series="[{ data: accuracyData }]"
+          :series="accuracyData"
         />
       </template>
     </IconCard>
@@ -137,9 +137,9 @@ import { storeToRefs } from 'pinia'
 
 import { browser, data, ConsoleLogger, EmptyMemory, Memory, Task, Validator } from '@epfml/discojs'
 
+import { chartOptions } from '@/charts'
 import { useMemoryStore } from '@/store/memory'
 import { useValidationStore } from '@/store/validation'
-import { chartOptions } from '@/charts'
 import { useToaster } from '@/composables/toaster'
 import IconCard from '@/components/containers/IconCard.vue'
 import CustomButton from '@/components/simple/CustomButton.vue'
@@ -162,9 +162,13 @@ const numberOfClasses = computed<number>(() =>
 const memory = computed<Memory>(() =>
   useIndexedDB ? new browser.IndexedDB() : new EmptyMemory())
 
-const accuracyData = computed<number[]>(() => {
+const accuracyData = computed<[{ data: number[] }]>(() => {
   const r = validator.value?.accuracyData
-  return r !== undefined ? r.toArray() : [0]
+  return [{
+    data: r !== undefined
+      ? r.map((e) => e * 100).toArray()
+      : [0]
+  }]
 })
 
 const currentAccuracy = computed<string>(() => {
